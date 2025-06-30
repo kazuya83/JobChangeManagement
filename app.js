@@ -12,96 +12,44 @@ firebase.initializeApp(firebaseConfig);
 const auth = firebase.auth();
 const db = firebase.firestore();
 
-// --- DOM Elements ---
+// DOM Elements
 const loginBtn = document.getElementById("login-btn");
 const logoutBtn = document.getElementById("logout-btn");
+const overlay = document.getElementById("overlay");
+const overlayLoginBtn = document.getElementById("overlay-login-btn");
+const userInfo = document.getElementById("user-info");
+const userNameSpan = document.getElementById("user-name");
 
 const openRegisterBtn = document.getElementById("open-register-btn");
+const openStatusMasterBtn = document.getElementById("open-status-master-btn");
+const filterStatusSelect = document.getElementById("filter-status-select");
+
+const companyList = document.getElementById("company-list");
+
 const registerModal = document.getElementById("register-modal");
 const registerForm = document.getElementById("register-form");
-const registerStatusSelect = registerForm.selectionStatus;
-
-const cardsContainer = document.getElementById("cards-container");
-const filterSelect = document.getElementById("filter-select");
 
 const detailModal = document.getElementById("detail-modal");
-const detailForm = document.getElementById("detail-form");
-const detailTitle = document.getElementById("detail-title");
-const detailStatusSelect = detailForm.selectionStatus;
-const editBtn = document.getElementById("edit-btn");
-const saveBtn = document.getElementById("save-btn");
-const cancelEditBtn = document.getElementById("cancel-edit-btn");
+const detailContent = document.getElementById("detail-content");
+const detailEditBtn = document.getElementById("detail-edit-btn");
+const detailCopyBtn = document.getElementById("detail-copy-btn");
+const detailCloseBtn = document.getElementById("detail-close-btn");
 
-const openStatusMasterBtn = document.getElementById("open-status-master-btn");
 const statusMasterModal = document.getElementById("status-master-modal");
-const statusListUl = document.getElementById("status-list");
-const addStatusForm = document.getElementById("add-status-form");
-const newStatusInput = document.getElementById("new-status");
-const newStatusColorInput = document.getElementById("new-status-color");
+const statusMasterForm = document.getElementById("status-master-form");
+const statusMasterList = document.getElementById("status-master-list");
+const statusMasterCancelBtn = document.getElementById("status-master-cancel-btn");
 
-// --- State ---
+// 状態変数
 let currentUser = null;
 let companies = [];
+let filteredCompanies = [];
 let statusMaster = [];
 let currentEditingCompanyId = null;
+let currentDetailCompany = null;
 
-// --- Auth ---
-loginBtn.onclick = () => {
-  const provider = new firebase.auth.GoogleAuthProvider();
-  auth.signInWithPopup(provider).catch(console.error);
-};
+// --- Utility ---
 
-logoutBtn.onclick = () => {
-  auth.signOut().catch(console.error);
-};
-
-auth.onAuthStateChanged(user => {
-  currentUser = user;
-  if (user) {
-    loginBtn.style.display = "none";
-    logoutBtn.style.display = "inline-block";
-    loadStatusMaster();
-    loadCompanies();
-  } else {
-    loginBtn.style.display = "inline-block";
-    logoutBtn.style.display = "none";
-    companies = [];
-    statusMaster = [];
-    renderCards();
-    renderFilterOptions();
-    renderStatusList();
-  }
-});
-
-// --- Firestore読み込み ---
-function loadCompanies() {
-  if (!currentUser) return;
-  db.collection("companies")
-    .where("uid", "==", currentUser.uid)
-    .orderBy("nextSelectionDate", "asc")
-    .onSnapshot(snapshot => {
-      companies = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-      renderCards();
-    }, err => {
-      console.error("企業データ取得失敗:", err);
-    });
-}
-
-function loadStatusMaster() {
-  if (!currentUser) return;
-  db.collection("statusMaster")
-    .where("uid", "==", currentUser.uid)
-    .onSnapshot(snapshot => {
-      statusMaster = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-      renderStatusList();
-      renderFilterOptions();
-      fillStatusSelects();
-    }, err => {
-      console.error("選考状況取得失敗:", err);
-    });
-}
-
-// --- モーダル制御 ---
 function openModal(modal) {
   modal.style.display = "flex";
 }
@@ -109,234 +57,372 @@ function closeModal(modal) {
   modal.style.display = "none";
 }
 
-document.querySelectorAll(".modal .close-btn").forEach(btn => {
-  btn.onclick = e => {
-    closeModal(e.target.closest(".modal"));
-    resetDetailForm();
-    resetRegisterForm();
-  };
-});
-
-// --- 企業登録 ---
-openRegisterBtn.onclick = () => {
-  if (statusMaster.length === 0) {
-    alert("まず選考状況マスタを登録してください。");
-    openModal(statusMasterModal);
-    return;
+// --- ログイン処理 ---
+async function signInWithGoogle() {
+  const provider = new firebase.auth.GoogleAuthProvider();
+  try {
+    await auth.signInWithPopup(provider);
+  } catch (e) {
+    alert("ログインに失敗しました: " + e.message);
   }
-  fillStatusSelects();
-  resetRegisterForm();
-  openModal(registerModal);
-};
+}
+function signOut() {
+  auth.signOut();
+}
 
-registerForm.onsubmit = e => {
-  e.preventDefault();
-  if (!currentUser) return alert("ログインしてください");
-  const data = new FormData(registerForm);
-  const payload = {
-    uid: currentUser.uid,
-    companyName: data.get("companyName").trim(),
-    location: data.get("location").trim(),
-    offeredAnnualSalary: data.get("offeredAnnualSalary").trim(),
-    salaryRangeMin: data.get("salaryRangeMin").trim(),
-    salaryRangeMax: data.get("salaryRangeMax").trim(),
-    position: data.get("position").trim(),
-    languages: data.get("languages").split(",").map(s => s.trim()).filter(s => s),
-    jobDescription: data.get("jobDescription").trim(),
-    remotePolicy: data.get("remotePolicy").trim(),
-    flexPolicy: data.get("flexPolicy").trim(),
-    selectionStatus: data.get("selectionStatus"),
-    nextSelectionDate: data.get("nextSelectionDate") ? firebase.firestore.Timestamp.fromDate(new Date(data.get("nextSelectionDate"))) : null,
-    createdAt: firebase.firestore.FieldValue.serverTimestamp()
-  };
-  db.collection("companies").add(payload)
-    .then(() => {
-      closeModal(registerModal);
-      resetRegisterForm();
-    })
-    .catch(console.error);
-};
-
-// --- 企業カード表示 ---
-function renderCards() {
-  cardsContainer.innerHTML = "";
-  let filtered = companies;
-  if (filterSelect.value) {
-    filtered = companies.filter(c => c.selectionStatus === filterSelect.value);
+function setUIForUser(user) {
+  if (user) {
+    currentUser = user;
+    userNameSpan.textContent = user.displayName || user.email;
+    userInfo.classList.remove("hidden");
+    loginBtn.style.display = "none";
+    logoutBtn.style.display = "inline-block";
+    overlay.classList.add("hidden");
+    loadStatusMaster();
+    loadCompanies();
+  } else {
+    currentUser = null;
+    userInfo.classList.add("hidden");
+    loginBtn.style.display = "inline-block";
+    logoutBtn.style.display = "none";
+    overlay.classList.remove("hidden");
+    companies = [];
+    filteredCompanies = [];
+    renderCompanyList();
+    clearStatusMasterSelect();
   }
-  filtered.forEach((c, i) => {
-    const card = document.createElement("div");
-    card.className = "card";
-    const statusObj = statusMaster.find(s => s.name === c.selectionStatus);
-    if (statusObj?.color) card.style.backgroundColor = statusObj.color;
+}
 
-    card.innerHTML = `
-      <h3>${i + 1}. ${c.companyName}</h3>
-      <p><strong>提示年収:</strong> ${c.offeredAnnualSalary || "-"}</p>
-      <p><strong>選考状況:</strong> ${c.selectionStatus || "-"}</p>
-      <p><strong>次回選考日:</strong> ${c.nextSelectionDate ? c.nextSelectionDate.toDate().toLocaleDateString() : "-"}</p>
-    `;
-    card.onclick = () => openDetailModal(c);
-    cardsContainer.appendChild(card);
+// --- 選考状況マスタ ---
+// Firestoreコレクション：users/{uid}/statusMaster
+async function loadStatusMaster() {
+  if (!currentUser) return;
+  const colRef = db.collection("users").doc(currentUser.uid).collection("statusMaster");
+  try {
+    const snapshot = await colRef.get();
+    statusMaster = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    if(statusMaster.length === 0){
+      // 初期マスタ例
+      statusMaster = [
+        { id:"default-1", name: "未選考", color: "#9e9e9e" },
+        { id:"default-2", name: "書類選考中", color: "#42a5f5" },
+        { id:"default-3", name: "面接中", color: "#ffa726" },
+        { id:"default-4", name: "内定", color: "#66bb6a" },
+        { id:"default-5", name: "辞退", color: "#ef5350" }
+      ];
+      // Firestoreに初期データ保存（ユーザ独自なので既存あれば上書きしない）
+      for(let s of statusMaster){
+        if(s.id.startsWith("default-")){
+          // skip write for default placeholders (to avoid overwrite)
+          continue;
+        }
+      }
+    }
+    renderStatusMasterSelect();
+    renderStatusMasterList();
+    updateRegisterStatusOptions();
+  } catch(e){
+    console.error("選考状況マスタ取得失敗:", e);
+  }
+}
+
+async function addStatusMaster(name, color){
+  if(!currentUser) return;
+  const colRef = db.collection("users").doc(currentUser.uid).collection("statusMaster");
+  try {
+    await colRef.add({ name, color });
+    await loadStatusMaster();
+  } catch(e){
+    alert("選考状況追加失敗: " + e.message);
+  }
+}
+async function deleteStatusMaster(id){
+  if(!currentUser) return;
+  const colRef = db.collection("users").doc(currentUser.uid).collection("statusMaster");
+  try {
+    await colRef.doc(id).delete();
+    await loadStatusMaster();
+  } catch(e){
+    alert("選考状況削除失敗: " + e.message);
+  }
+}
+
+function renderStatusMasterSelect(){
+  // フィルター用セレクト
+  filterStatusSelect.innerHTML = `<option value="">すべての選考状況</option>`;
+  statusMaster.forEach(s => {
+    filterStatusSelect.innerHTML += `<option value="${escapeHtml(s.name)}">${escapeHtml(s.name)}</option>`;
   });
 }
 
-// --- 選考状況絞り込み ---
-filterSelect.onchange = () => {
-  renderCards();
-};
-
-function renderFilterOptions() {
-  const selected = filterSelect.value || "";
-  filterSelect.innerHTML = '<option value="">🏷️ 全て</option>';
+function renderStatusMasterList(){
+  statusMasterList.innerHTML = "";
   statusMaster.forEach(s => {
-    const opt = document.createElement("option");
-    opt.value = s.name;
-    opt.textContent = s.name;
-    if (s.name === selected) opt.selected = true;
-    filterSelect.appendChild(opt);
-  });
-}
-
-// --- ステータスマスタリスト表示 ---
-function renderStatusList() {
-  statusListUl.innerHTML = "";
-  statusMaster.forEach(s => {
+    if(s.id.startsWith("default-")) return; // デフォルトは消せない
     const li = document.createElement("li");
-    li.style.backgroundColor = s.color || "#eee";
+    li.style.backgroundColor = s.color;
     li.textContent = s.name;
     const delBtn = document.createElement("button");
     delBtn.textContent = "削除";
     delBtn.onclick = () => {
-      if(confirm(`「${s.name}」を削除しますか？\n※ この選考状況を使用している企業の選考状況は空になります。`)) {
-        db.collection("companies").where("uid", "==", currentUser.uid).where("selectionStatus", "==", s.name).get()
-          .then(snapshot => {
-            const batch = db.batch();
-            snapshot.forEach(doc => {
-              batch.update(doc.ref, { selectionStatus: "" });
-            });
-            batch.delete(db.collection("statusMaster").doc(s.id));
-            return batch.commit();
-          })
-          .catch(console.error);
+      if(confirm(`「${s.name}」を削除しますか？\n※この選考状況が登録された企業には影響しません。`)){
+        deleteStatusMaster(s.id);
       }
     };
     li.appendChild(delBtn);
-    statusListUl.appendChild(li);
+    statusMasterList.appendChild(li);
   });
 }
 
-// --- ステータスマスタ追加 ---
-addStatusForm.onsubmit = e => {
-  e.preventDefault();
-  const name = newStatusInput.value.trim();
-  const color = newStatusColorInput.value;
-  if (!name) return alert("選考状況名を入力してください");
-  if (statusMaster.some(s => s.name === name)) {
-    return alert("同じ名前の選考状況がすでに存在します");
+function updateRegisterStatusOptions(){
+  const select = registerForm.selectionStatus;
+  select.innerHTML = "";
+  statusMaster.forEach(s => {
+    const opt = document.createElement("option");
+    opt.value = s.name;
+    opt.textContent = s.name;
+    select.appendChild(opt);
+  });
+}
+
+// --- 企業データ ---
+// Firestoreコレクション：users/{uid}/companies
+async function loadCompanies() {
+  if (!currentUser) return;
+  const colRef = db.collection("users").doc(currentUser.uid).collection("companies").orderBy("nextSelectionDate");
+  try {
+    const snapshot = await colRef.get();
+    companies = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    applyFilterAndRender();
+  } catch (e) {
+    console.error("企業データ取得失敗:", e);
+    alert("企業データ取得に失敗しました。");
   }
-  db.collection("statusMaster").add({
-    uid: currentUser.uid,
-    name,
-    color
-  }).then(() => {
-    newStatusInput.value = "";
-    newStatusColorInput.value = "#eeeeee";
-  }).catch(console.error);
-};
-
-// --- 詳細モーダル --- 
-function openDetailModal(company) {
-  currentEditingCompanyId = company.id;
-  detailTitle.textContent = company.companyName;
-
-  // 各フォームにセット
-  detailForm.location.value = company.location || "";
-  detailForm.offeredAnnualSalary.value = company.offeredAnnualSalary || "";
-  detailForm.salaryRangeMin.value = company.salaryRangeMin || "";
-  detailForm.salaryRangeMax.value = company.salaryRangeMax || "";
-  detailForm.position.value = company.position || "";
-  detailForm.languages.value = (company.languages || []).join(", ");
-  detailForm.jobDescription.value = company.jobDescription || "";
-  detailForm.remotePolicy.value = company.remotePolicy || "";
-  detailForm.flexPolicy.value = company.flexPolicy || "";
-  detailForm.selectionStatus.value = company.selectionStatus || "";
-  detailForm.nextSelectionDate.value = company.nextSelectionDate ? company.nextSelectionDate.toDate().toISOString().substr(0, 10) : "";
-
-  // 編集不可で表示
-  Array.from(detailForm.elements).forEach(el => {
-    if (el.tagName !== "BUTTON") el.disabled = true;
-  });
-  editBtn.style.display = "inline-block";
-  saveBtn.style.display = "none";
-  cancelEditBtn.style.display = "none";
-
-  openModal(detailModal);
 }
 
-editBtn.onclick = () => {
-  // 編集モード
-  Array.from(detailForm.elements).forEach(el => {
-    if (el.tagName !== "BUTTON") el.disabled = false;
-  });
-  editBtn.style.display = "none";
-  saveBtn.style.display = "inline-block";
-  cancelEditBtn.style.display = "inline-block";
-};
+function applyFilterAndRender(){
+  const filterVal = filterStatusSelect.value;
+  if(filterVal){
+    filteredCompanies = companies.filter(c => c.selectionStatus === filterVal);
+  } else {
+    filteredCompanies = companies.slice();
+  }
+  renderCompanyList();
+}
 
-cancelEditBtn.onclick = () => {
-  // 編集キャンセル＝再表示
-  if (!currentEditingCompanyId) return;
-  const company = companies.find(c => c.id === currentEditingCompanyId);
-  if (company) openDetailModal(company);
-};
+function renderCompanyList() {
+  companyList.innerHTML = "";
+  if (filteredCompanies.length === 0) {
+    companyList.innerHTML = `<p>登録された企業がありません。</p>`;
+    return;
+  }
+  filteredCompanies.forEach((c, i) => {
+    const color = getStatusColor(c.selectionStatus);
+    const card = document.createElement("div");
+    card.className = "company-card";
+    card.style.borderLeft = `6px solid ${color || "#888"}`;
+    card.innerHTML = `
+      <div class="no">No: ${i + 1}</div>
+      <div class="company-name">${escapeHtml(c.name)}</div>
+      <div>提示年収: ${escapeHtml(c.salary || "")}</div>
+      <div>選考状況: ${escapeHtml(c.selectionStatus)}</div>
+      <div>次回選考日: ${escapeHtml(c.nextSelectionDate || "")}</div>
+      <button class="copy-btn">コピー</button>
+    `;
+    companyList.appendChild(card);
 
-detailForm.onsubmit = e => {
-  e.preventDefault();
-  if (!currentEditingCompanyId) return;
-  const data = new FormData(detailForm);
-  const payload = {
-    location: data.get("location").trim(),
-    offeredAnnualSalary: data.get("offeredAnnualSalary").trim(),
-    salaryRangeMin: data.get("salaryRangeMin").trim(),
-    salaryRangeMax: data.get("salaryRangeMax").trim(),
-    position: data.get("position").trim(),
-    languages: data.get("languages").split(",").map(s => s.trim()).filter(s => s),
-    jobDescription: data.get("jobDescription").trim(),
-    remotePolicy: data.get("remotePolicy").trim(),
-    flexPolicy: data.get("flexPolicy").trim(),
-    selectionStatus: data.get("selectionStatus"),
-    nextSelectionDate: data.get("nextSelectionDate") ? firebase.firestore.Timestamp.fromDate(new Date(data.get("nextSelectionDate"))) : null,
-    updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-  };
-  db.collection("companies").doc(currentEditingCompanyId).update(payload)
-    .then(() => {
-      closeModal(detailModal);
-      currentEditingCompanyId = null;
-    })
-    .catch(console.error);
-};
-
-// --- 選考状況選択肢を全フォームに反映 ---
-function fillStatusSelects() {
-  [registerStatusSelect, detailStatusSelect].forEach(sel => {
-    const selectedVal = sel.value;
-    sel.innerHTML = '<option value="">選択してください</option>';
-    statusMaster.forEach(s => {
-      const opt = document.createElement("option");
-      opt.value = s.name;
-      opt.textContent = s.name;
-      if (s.name === selectedVal) opt.selected = true;
-      sel.appendChild(opt);
-    });
+    card.onclick = (e) => {
+      if(e.target.classList.contains("copy-btn")){
+        e.stopPropagation();
+        openCopyModal(c);
+      } else {
+        openDetailModal(c);
+      }
+    };
   });
 }
 
-// --- フォームリセット ---
-function resetRegisterForm() {
+function getStatusColor(statusName) {
+  const s = statusMaster.find(st => st.name === statusName);
+  return s ? s.color : null;
+}
+
+// --- モーダル制御 ---
+
+// 登録モーダルのオープン（新規登録 or 編集 or コピー）
+function openRegisterModal(company) {
+  resetRegisterForm();
+  currentEditingCompanyId = null;
+
+  if(company){
+    // 編集 or コピー
+    registerForm.name.value = company.name || "";
+    registerForm.location.value = company.location || "";
+    registerForm.salary.value = company.salary || "";
+    registerForm.range_min.value = company.range_min || "";
+    registerForm.range_max.value = company.range_max || "";
+    registerForm.position.value = company.position || "";
+    registerForm.languages.value = (company.languages || []).join(", ");
+    registerForm.jobDescription.value = company.jobDescription || "";
+    registerForm.remotePolicy.value = company.remotePolicy || "";
+    registerForm.flexPolicy.value = company.flexPolicy || "";
+    registerForm.selectionStatus.value = company.selectionStatus || (statusMaster[0]?.name || "");
+    registerForm.nextSelectionDate.value = company.nextSelectionDate || "";
+    currentEditingCompanyId = company.id || null;
+  } else {
+    // 新規
+    registerForm.selectionStatus.value = statusMaster[0]?.name || "";
+  }
+  openModal(registerModal);
+}
+
+function resetRegisterForm(){
   registerForm.reset();
-}
-function resetDetailForm() {
-  detailForm.reset();
   currentEditingCompanyId = null;
 }
+
+function closeRegisterModal(){
+  closeModal(registerModal);
+}
+
+// 詳細モーダルオープン
+function openDetailModal(company){
+  currentDetailCompany = company;
+  detailContent.innerHTML = `
+    <p><strong>企業名:</strong> ${escapeHtml(company.name)}</p>
+    <p><strong>勤務地:</strong> ${escapeHtml(company.location)}</p>
+    <p><strong>提示年収:</strong> ${escapeHtml(company.salary)}</p>
+    <p><strong>給与range_min:</strong> ${escapeHtml(company.range_min)}</p>
+    <p><strong>給与range_max:</strong> ${escapeHtml(company.range_max)}</p>
+    <p><strong>ポジション:</strong> ${escapeHtml(company.position)}</p>
+    <p><strong>言語:</strong> ${escapeHtml((company.languages || []).join(", "))}</p>
+    <p><strong>業務内容:</strong> ${escapeHtml(company.jobDescription)}</p>
+    <p><strong>リモート制度:</strong> ${escapeHtml(company.remotePolicy)}</p>
+    <p><strong>フレックス制度:</strong> ${escapeHtml(company.flexPolicy)}</p>
+    <p><strong>選考状況:</strong> ${escapeHtml(company.selectionStatus)}</p>
+    <p><strong>次回選考日:</strong> ${escapeHtml(company.nextSelectionDate)}</p>
+  `;
+  openModal(detailModal);
+}
+function closeDetailModal(){
+  closeModal(detailModal);
+}
+
+// コピー用モーダルオープン（登録モーダルを開き、データをセット）
+function openCopyModal(company){
+  openRegisterModal(company);
+  currentEditingCompanyId = null; // コピーは新規登録扱い
+}
+
+// 選考状況マスタモーダル
+function openStatusMasterModal(){
+  openModal(statusMasterModal);
+}
+function closeStatusMasterModal(){
+  closeModal(statusMasterModal);
+}
+
+// --- イベント登録 ---
+
+// ログイン・ログアウト
+loginBtn.onclick = () => signInWithGoogle();
+overlayLoginBtn.onclick = () => signInWithGoogle();
+logoutBtn.onclick = () => signOut();
+
+// フィルター選択変更
+filterStatusSelect.onchange = () => applyFilterAndRender();
+
+// 企業登録モーダルオープン
+openRegisterBtn.onclick = () => openRegisterModal();
+
+// 選考状況マスタ設定モーダルオープン
+openStatusMasterBtn.onclick = () => openStatusMasterModal();
+
+// 登録モーダルキャンセル
+document.getElementById("register-cancel-btn").onclick = () => closeRegisterModal();
+
+// 詳細モーダル閉じる
+detailCloseBtn.onclick = () => closeDetailModal();
+
+// 詳細モーダル編集ボタン
+detailEditBtn.onclick = () => {
+  if(currentDetailCompany){
+    openRegisterModal(currentDetailCompany);
+    closeDetailModal();
+  }
+};
+
+// 選考状況マスタモーダル閉じる
+document.getElementById("status-master-close-btn").onclick = () => closeStatusMasterModal();
+
+// 選考状況マスタ追加フォーム
+document.getElementById("status-master-add-btn").onclick = () => {
+  const name = document.getElementById("status-master-name").value.trim();
+  const color = document.getElementById("status-master-color").value;
+  if(!name){
+    alert("選考状況名を入力してください。");
+    return;
+  }
+  addStatusMaster(name, color);
+  document.getElementById("status-master-name").value = "";
+};
+
+// 企業登録フォームsubmit
+registerForm.onsubmit = async (e) => {
+  e.preventDefault();
+  if(!currentUser){
+    alert("ログインしてください。");
+    return;
+  }
+  const data = {
+    name: registerForm.name.value.trim(),
+    location: registerForm.location.value.trim(),
+    salary: registerForm.salary.value.trim(),
+    range_min: registerForm.range_min.value.trim(),
+    range_max: registerForm.range_max.value.trim(),
+    position: registerForm.position.value.trim(),
+    languages: registerForm.languages.value.trim().split(",").map(s => s.trim()).filter(s => s),
+    jobDescription: registerForm.jobDescription.value.trim(),
+    remotePolicy: registerForm.remotePolicy.value.trim(),
+    flexPolicy: registerForm.flexPolicy.value.trim(),
+    selectionStatus: registerForm.selectionStatus.value,
+    nextSelectionDate: registerForm.nextSelectionDate.value,
+  };
+  try {
+    const colRef = db.collection("users").doc(currentUser.uid).collection("companies");
+    if(currentEditingCompanyId){
+      await colRef.doc(currentEditingCompanyId).update(data);
+    } else {
+      await colRef.add(data);
+    }
+    await loadCompanies();
+    closeRegisterModal();
+  } catch(e){
+    alert("登録に失敗しました: " + e.message);
+  }
+};
+
+// ヘルパー関数
+function escapeHtml(text){
+  return text.replace(/[&<>"']/g, (m) => ({
+    "&":"&amp;",
+    "<":"&lt;",
+    ">":"&gt;",
+    '"':"&quot;",
+    "'":"&#39;"
+  })[m]);
+}
+
+// モーダル開閉ユーティリティ
+function openModal(modal){
+  modal.classList.remove("hidden");
+}
+function closeModal(modal){
+  modal.classList.add("hidden");
+}
+
+firebase.auth().onAuthStateChanged(user => {
+  setUIForUser(user);
+});
+loadStatusMaster();
+loadCompanies();

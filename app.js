@@ -321,7 +321,7 @@ function openDetailModal(company) {
     <p><strong>給与range_max:</strong> ${escapeHtml(company.range_max)}</p>
     <p><strong>ポジション:</strong> ${escapeHtml(company.position)}</p>
     <p><strong>言語:</strong> ${escapeHtml((company.languages || []).join(", "))}</p>
-    <p><strong>業務内容:</strong> ${escapeHtml(company.jobDescription)}</p>
+    <p><strong>業務内容:</strong> <br/>${escapeHtml(company.jobDescription).replace(/\n/g, "<br>")}</p>
     <p><strong>リモート制度:</strong> ${escapeHtml(company.remotePolicy)}</p>
     <p><strong>フレックス制度:</strong> ${escapeHtml(company.flexPolicy)}</p>
     <p><strong>選考状況:</strong> ${escapeHtml(company.selectionStatus)}</p>

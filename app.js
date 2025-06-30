@@ -1,3 +1,22 @@
+const loadingOverlay = document.getElementById("loading");
+
+function showLoading() {
+  loadingOverlay.classList.remove("hidden");
+}
+
+function hideLoading() {
+  loadingOverlay.classList.add("hidden");
+}
+
+function sleep(ms) {
+  return new Promise(resolve => setTimeout(resolve, ms));
+}
+
+// 初期化時ローディング表示
+showLoading();
+
+sleep(1000); 
+
 // Firebase初期化
 const firebaseConfig = {
   apiKey: "AIzaSyCTngInADgWVe4gu5y-CndjmlWQDJ2Ax1M",
@@ -42,7 +61,7 @@ const statusMasterNameInput = document.getElementById("status-master-name");
 const statusMasterColorInput = document.getElementById("status-master-color");
 const statusMasterAddBtn = document.getElementById("status-master-add-btn");
 const statusMasterCloseBtn = document.getElementById("status-master-cancel-btn");
-const openStatusMasterBtn = document.getElementById("open-status-master-btn");
+// const openStatusMasterBtn = document.getElementById("open-status-master-btn");
 
 const filterStatusSelect = document.getElementById("filter-status-select");
 const companyList = document.getElementById("company-list");
@@ -55,6 +74,7 @@ async function signInWithGoogle() {
   try {
     const provider = new firebase.auth.GoogleAuthProvider();
     await auth.signInWithPopup(provider);
+    hideLoading();
   } catch (e) {
     alert("ログイン失敗: " + e.message);
   }
@@ -339,13 +359,13 @@ openRegisterBtn.onclick = () => {
   openRegisterModal();
 };
 
-openStatusMasterBtn.onclick = () => {
-  if (!currentUser) {
-    alert("ログインしてください。");
-    return;
-  }
-  openStatusMasterModal();
-};
+// openStatusMasterBtn.onclick = () => {
+//   if (!currentUser) {
+//     alert("ログインしてください。");
+//     return;
+//   }
+//   openStatusMasterModal();
+// };
 
 registerCancelBtn.onclick = () => closeRegisterModal();
 
@@ -421,5 +441,6 @@ function escapeHtml(text) {
 // --- 初期化 ---
 
 auth.onAuthStateChanged(user => {
+  hideLoading();
   setUIForUser(user);
 });

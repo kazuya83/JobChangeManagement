@@ -14,27 +14,35 @@ const firebaseConfig = {
 };
 
 // ✅ Firebase 初期化
-const app = firebase.initializeApp(firebaseConfig);
-const db = firebase.firestore(app);
-const tasksRef = db.collection("tasks");
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+const tasksRef = collection(db, "tasks");
 
-// ✅ タスク追加関数
+// ✅ タスク追加処理
 async function addTask() {
   const input = document.getElementById("taskInput");
-  const task = input.value.trim();
-  if (!task) return;
-  await tasksRef.add({ text: task, done: false });
+  const text = input.value.trim();
+  if (!text) return;
+  await addDoc(tasksRef, { text, done: false });
   input.value = "";
 }
 
-// ✅ タスク一覧をリアルタイム表示
-tasksRef.onSnapshot(snapshot => {
-  const list = document.getElementById("taskList");
-  list.innerHTML = "";
-  snapshot.forEach(doc => {
-    const li = document.createElement("li");
-    li.textContent = doc.data().text;
-    li.onclick = () => doc.ref.delete(); // クリックで削除
-    list.appendChild(li);
+// ✅ タスク表示処理
+function renderTasks() {
+  onSnapshot(tasksRef, snapshot => {
+    const list = document.getElementById("taskList");
+    list.innerHTML = "";
+    snapshot.forEach(docSnap => {
+      const li = document.createElement("li");
+      li.textContent = docSnap.data().text;
+      li.onclick = () => deleteDoc(doc(db, "tasks", docSnap.id));
+      list.appendChild(li);
+    });
   });
+}
+
+// ✅ 初期化処理
+document.addEventListener("DOMContentLoaded", () => {
+  document.getElementById("addTaskBtn").addEventListener("click", addTask);
+  renderTasks();
 });

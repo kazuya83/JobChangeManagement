@@ -1,64 +1,120 @@
-/* 全体のレイアウト */
+/* style.css */
 body {
-  font-family: "Segoe UI", sans-serif;
-  background: #f9f9f9;
-  margin: 2rem auto;
-  padding: 2rem;
-  max-width: 600px;
-  box-shadow: 0 0 10px rgba(0,0,0,0.05);
-  border-radius: 8px;
-  background-color: #fff;
+  font-family: Arial, sans-serif;
+  margin: 0; padding: 0;
+  background: #f5f5f5;
 }
 
-/* タイトル */
-h1 {
-  text-align: center;
-  color: #333;
-  margin-bottom: 1.5rem;
-}
-
-/* 入力とボタン */
-input#taskInput {
-  width: 70%;
-  padding: 0.6rem;
-  font-size: 1rem;
-  border: 1px solid #ccc;
-  border-radius: 4px;
-  outline: none;
+header {
+  background: #2c3e50;
+  color: white;
+  padding: 1rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
 }
 
 button {
-  padding: 0.6rem 1rem;
-  margin-left: 0.5rem;
-  font-size: 1rem;
-  background-color: #007bff;
-  color: white;
+  cursor: pointer;
+  margin: 0 0.3rem;
+  padding: 0.5rem 1rem;
   border: none;
+  background: #3498db;
+  color: white;
   border-radius: 4px;
+}
+
+button:disabled {
+  background: #bdc3c7;
+  cursor: not-allowed;
+}
+
+main {
+  padding: 1rem;
+}
+
+#cards-container {
+  margin-top: 1rem;
+  display: grid;
+  grid-template-columns: repeat(auto-fill,minmax(250px,1fr));
+  gap: 1rem;
+}
+
+.card {
+  background: white;
+  padding: 1rem;
+  border-radius: 6px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.2);
   cursor: pointer;
 }
 
-button:hover {
-  background-color: #0056b3;
+.card:hover {
+  box-shadow: 0 4px 10px rgba(0,0,0,0.3);
 }
 
-/* タスクリスト */
-ul#taskList {
+.modal {
+  display: none; 
+  position: fixed; 
+  z-index: 999;
+  left: 0; top: 0;
+  width: 100%; height: 100%;
+  overflow: auto;
+  background-color: rgba(0,0,0,0.5);
+}
+
+.modal-content {
+  background-color: #fefefe;
+  margin: 5% auto; 
+  padding: 20px;
+  border-radius: 8px;
+  max-width: 600px;
+  position: relative;
+}
+
+.close {
+  color: #aaa;
+  position: absolute;
+  right: 15px;
+  top: 10px;
+  font-size: 28px;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+.close:hover {
+  color: black;
+}
+
+label {
+  display: block;
+  margin: 0.5rem 0;
+}
+
+input[type="text"], textarea, select, input[type="date"] {
+  width: 100%;
+  padding: 0.4rem;
+  margin-top: 0.2rem;
+  box-sizing: border-box;
+}
+
+textarea {
+  resize: vertical;
+}
+
+#status-list {
   list-style: none;
-  padding-left: 0;
-  margin-top: 2rem;
+  padding: 0;
 }
 
-ul#taskList li {
-  padding: 0.75rem 1rem;
-  margin-bottom: 0.5rem;
-  background-color: #f0f8ff;
-  border-left: 5px solid #007bff;
-  cursor: pointer;
-  transition: background 0.3s ease;
-  border-radius: 4px;
+#status-list li {
+  padding: 0.5rem 0;
+  display: flex;
+  justify-content: space-between;
+  border-bottom: 1px solid #ddd;
 }
 
-ul#taskList li:hover {
-  background-color: #e0f0ff;
+#status-list button {
+  background: #e74c3c;
+  padding: 0.2rem 0.6rem;
+  font-size: 0.9rem;
 }

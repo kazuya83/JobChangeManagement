@@ -1,21 +1,82 @@
+<!-- index.html -->
 <!DOCTYPE html>
 <html lang="ja">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Job Change Management</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>転職企業管理アプリ</title>
   <link rel="stylesheet" href="style.css" />
+  <!-- Firebase SDK -->
+  <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore-compat.js"></script>
 </head>
 <body>
-  <button id="loginBtn">Googleでログイン</button>
-  <button id="logoutBtn" style="display:none;">ログアウト</button>
-  
-  <h1>TODO List</h1>
-  <input id="taskInput" placeholder="New task..." />
-  <button id="addTaskBtn">Add</button>
-  <ul id="taskList"></ul>
+  <header>
+    <h1>転職企業管理アプリ</h1>
+    <div id="auth-area">
+      <button id="login-btn">Googleでログイン</button>
+      <button id="logout-btn" style="display:none;">ログアウト</button>
+      <span id="user-name"></span>
+    </div>
+  </header>
 
-  <!-- モジュールとして読み込む -->
-  <script type="module" src="app.js"></script>
+  <main>
+    <button id="open-register-modal-btn" disabled>企業登録</button>
+    <button id="open-status-master-modal-btn" disabled>選考状況マスタ管理</button>
+
+    <div id="cards-container"></div>
+  </main>
+
+  <!-- 企業登録モーダル -->
+  <div id="register-modal" class="modal">
+    <div class="modal-content">
+      <span class="close" id="register-modal-close">&times;</span>
+      <h2>企業登録</h2>
+      <form id="register-form">
+        <label>企業名<input type="text" name="company" required></label>
+        <label>勤務地<input type="text" name="location"></label>
+        <label>提示年収<input type="text" name="annualSalary"></label>
+        <label>給与range_min<input type="text" name="salaryMin"></label>
+        <label>給与range_max<input type="text" name="salaryMax"></label>
+        <label>ポジション<input type="text" name="position"></label>
+        <label>言語（カンマ区切り）<input type="text" name="languages"></label>
+        <label>業務内容<textarea name="jobDescription"></textarea></label>
+        <label>リモート制度<input type="text" name="remote"></label>
+        <label>フレックス制度<input type="text" name="flex"></label>
+        <label>選考状況
+          <select name="status" id="status-select" required>
+            <!-- 選考状況は動的に読み込み -->
+          </select>
+        </label>
+        <label>次回選考日<input type="date" name="nextSelectionDate"></label>
+        <button type="submit">登録</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- 選考状況マスタ管理モーダル -->
+  <div id="status-master-modal" class="modal">
+    <div class="modal-content">
+      <span class="close" id="status-master-modal-close">&times;</span>
+      <h2>選考状況マスタ管理</h2>
+      <ul id="status-list"></ul>
+      <form id="add-status-form">
+        <input type="text" id="new-status" placeholder="新しい選考状況" required />
+        <button type="submit">追加</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- 詳細表示モーダル -->
+  <div id="detail-modal" class="modal">
+    <div class="modal-content">
+      <span class="close" id="detail-modal-close">&times;</span>
+      <h2>企業詳細</h2>
+      <div id="detail-content"></div>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
 </body>
 </html>

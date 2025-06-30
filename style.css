@@ -116,7 +116,6 @@ select#filter-status-select {
   width: 100vw;
   height: 100vh;
   background: rgba(0,0,0,0.35);
-  display: none;
   justify-content: center;
   align-items: center;
   z-index: 10000;

@@ -294,7 +294,7 @@ function openRegisterModal(company) {
     registerForm.range_min.value = company.range_min || "";
     registerForm.range_max.value = company.range_max || "";
     registerForm.position.value = company.position || "";
-    registerForm.languages.value = (company.languages || []).join(", ");
+    registerForm.languages.value = company.languages || "";
     registerForm.jobDescription.value = company.jobDescription || "";
     registerForm.remotePolicy.value = company.remotePolicy || "";
     registerForm.flexPolicy.value = company.flexPolicy || "";
@@ -313,6 +313,7 @@ function closeRegisterModal() {
 
 function openDetailModal(company) {
   currentDetailCompany = company;
+  console.log(company);
   detailContent.innerHTML = `
     <p><strong>企業名:</strong> ${escapeHtml(company.name)}</p>
     <p><strong>勤務地:</strong> ${escapeHtml(company.location)}</p>
@@ -320,7 +321,7 @@ function openDetailModal(company) {
     <p><strong>給与range_min:</strong> ${escapeHtml(company.range_min)}</p>
     <p><strong>給与range_max:</strong> ${escapeHtml(company.range_max)}</p>
     <p><strong>ポジション:</strong> ${escapeHtml(company.position)}</p>
-    <p><strong>言語:</strong> ${escapeHtml((company.languages || []).join(", "))}</p>
+    <p><strong>言語等:</strong> <br/>${escapeHtml(company.languages).replace(/\n/g, "<br>")}</p>
     <p><strong>業務内容:</strong> <br/>${escapeHtml(company.jobDescription).replace(/\n/g, "<br>")}</p>
     <p><strong>リモート制度:</strong> ${escapeHtml(company.remotePolicy)}</p>
     <p><strong>フレックス制度:</strong> ${escapeHtml(company.flexPolicy)}</p>
@@ -409,7 +410,7 @@ registerForm.onsubmit = async (e) => {
     range_min: registerForm.range_min.value.trim(),
     range_max: registerForm.range_max.value.trim(),
     position: registerForm.position.value.trim(),
-    languages: registerForm.languages.value.trim().split(",").map(s => s.trim()).filter(Boolean),
+    languages: registerForm.languages.value.trim(),
     jobDescription: registerForm.jobDescription.value.trim(),
     remotePolicy: registerForm.remotePolicy.value.trim(),
     flexPolicy: registerForm.flexPolicy.value.trim(),

@@ -41,7 +41,7 @@ const statusMasterList = document.getElementById("status-master-list");
 const statusMasterNameInput = document.getElementById("status-master-name");
 const statusMasterColorInput = document.getElementById("status-master-color");
 const statusMasterAddBtn = document.getElementById("status-master-add-btn");
-const statusMasterCloseBtn = document.getElementById("status-master-close-btn");
+const statusMasterCloseBtn = document.getElementById("status-master-cancel-btn");
 const openStatusMasterBtn = document.getElementById("open-status-master-btn");
 
 const filterStatusSelect = document.getElementById("filter-status-select");

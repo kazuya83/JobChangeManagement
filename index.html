@@ -36,7 +36,7 @@
 
     <section class="actions">
       <button id="open-register-btn">企業登録</button>
-      <!-- <button id="open-status-master-btn">選考状況マスタ設定</button> -->
+      <button id="open-status-master-btn">選考状況マスタ設定</button>
       <select id="filter-status-select">
         <option value="">すべての選考状況</option>
       </select>
@@ -90,10 +90,10 @@
     <div class="modal-content">
       <h3>選考状況マスタ設定</h3>
       <form id="status-master-form">
-        <label>選考状況名 <input name="statusName" class="status-master-name" required /></label>
-        <label>色 <input name="color" type="color" class="status-master-color" required /></label>
+        <label>選考状況名 <input name="statusName" id="status-master-name" required /></label>
+        <label>色 <input name="color" type="color" id="status-master-color" required /></label>
         <div class="modal-buttons">
-          <button type="submit" id="status-master-add-btn">追加</button>
+          <button type="button" id="status-master-add-btn">追加</button>
           <button type="button" id="status-master-cancel-btn">閉じる</button>
         </div>
       </form>

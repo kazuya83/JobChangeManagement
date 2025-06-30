@@ -61,7 +61,7 @@ const statusMasterNameInput = document.getElementById("status-master-name");
 const statusMasterColorInput = document.getElementById("status-master-color");
 const statusMasterAddBtn = document.getElementById("status-master-add-btn");
 const statusMasterCloseBtn = document.getElementById("status-master-cancel-btn");
-// const openStatusMasterBtn = document.getElementById("open-status-master-btn");
+const openStatusMasterBtn = document.getElementById("open-status-master-btn");
 
 const filterStatusSelect = document.getElementById("filter-status-select");
 const companyList = document.getElementById("company-list");
@@ -363,13 +363,13 @@ openRegisterBtn.onclick = () => {
   openRegisterModal();
 };
 
-// openStatusMasterBtn.onclick = () => {
-//   if (!currentUser) {
-//     alert("ログインしてください。");
-//     return;
-//   }
-//   openStatusMasterModal();
-// };
+openStatusMasterBtn.onclick = () => {
+  if (!currentUser) {
+    alert("ログインしてください。");
+    return;
+  }
+  openStatusMasterModal();
+};
 
 registerCancelBtn.onclick = () => closeRegisterModal();
 

@@ -244,6 +244,7 @@ function renderCompanyList() {
       <div>選考状況: ${escapeHtml(c.selectionStatus)}</div>
       <div>次回選考日: ${escapeHtml(c.nextSelectionDate)}</div>
       <button class="copy-btn">コピー</button>
+      <button class="delete-btn" id="${c.id}">削除</button>
     `;
     companyList.appendChild(card);
 
@@ -251,6 +252,9 @@ function renderCompanyList() {
       if (e.target.classList.contains("copy-btn")) {
         e.stopPropagation();
         openCopyModal(c);
+      } else if (e.target.classList.contains("delete-btn")) {
+        e.stopPropagation();
+        deleteCompany(e.target.id);
       } else {
         openDetailModal(c);
       }
@@ -444,3 +448,39 @@ auth.onAuthStateChanged(user => {
   hideLoading();
   setUIForUser(user);
 });
+
+async function deleteCompany(companyId) {
+  if (!currentUser || !companyId) return;
+  const confirmed = confirm("この企業データを削除しますか？");
+  if (!confirmed) return;
+
+  try {
+    await db.collection("users")
+            .doc(currentUser.uid)
+            .collection("companies")
+            .doc(companyId)
+            .delete();
+    await loadCompanies();  // 一覧再読み込み
+    closeDetailModal();     // モーダルを閉じる
+  } catch (e) {
+    alert("削除に失敗しました: " + e.message);
+  }
+}
+
+async function deleteCompany(companyId) {
+  if (!currentUser || !companyId) return;
+  const confirmed = confirm("この企業データを削除しますか？");
+  if (!confirmed) return;
+
+  try {
+    await db.collection("users")
+            .doc(currentUser.uid)
+            .collection("companies")
+            .doc(companyId)
+            .delete();
+    await loadCompanies();  // 一覧再読み込み
+    closeDetailModal();     // モーダルを閉じる
+  } catch (e) {
+    alert("削除に失敗しました: " + e.message);
+  }
+}

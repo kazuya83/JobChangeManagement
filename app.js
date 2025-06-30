@@ -313,7 +313,6 @@ function closeRegisterModal() {
 
 function openDetailModal(company) {
   currentDetailCompany = company;
-  console.log(company);
   detailContent.innerHTML = `
     <p><strong>企業名:</strong> ${escapeHtml(company.name)}</p>
     <p><strong>勤務地:</strong> ${escapeHtml(company.location)}</p>

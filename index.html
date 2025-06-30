@@ -1,52 +1,52 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>転職企業管理アプリ</title>
-<link rel="stylesheet" href="style.css" />
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>転職企業管理アプリ</title>
+  <link rel="stylesheet" href="style.css" />
 </head>
 <body>
 
-<h1>転職企業管理アプリ</h1>
+<header class="header">
+  <h1>転職企業管理アプリ</h1>
+  <div class="actions">
+    <select id="filter-status">
+      <option value="">🏷️ 全て</option>
+    </select>
+    <button id="open-register-btn" class="primary" style="display:none;">＋企業登録</button>
+    <button id="open-status-master-btn" style="display:none;">🔧 選考状況設定</button>
+    <button id="login-btn">Googleログイン</button>
+    <button id="logout-btn" style="display:none;">ログアウト</button>
+  </div>
+</header>
 
-<button id="login-btn">Googleでログイン</button>
-<button id="logout-btn" style="display:none;">ログアウト</button>
-<button id="open-register-btn" style="display:none;">企業情報登録</button>
+<main>
+  <div id="cards-container" class="cards"></div>
+</main>
 
-<div id="cards-container">
-  <!-- 企業カード一覧ここに -->
-</div>
-
-<!-- 企業登録モーダル -->
+<!-- 登録モーダル -->
 <div id="register-modal" class="modal">
   <div class="modal-content">
     <button class="close-btn">&times;</button>
     <h2>企業情報登録</h2>
     <form id="register-form">
-      <label>企業名<input type="text" name="companyName" required /></label>
-      <label>勤務地<input type="text" name="location" /></label>
-      <label>提示年収<input type="text" name="offeredAnnualSalary" /></label>
-      <label>給与レンジ（最小）<input type="text" name="salaryRangeMin" /></label>
-      <label>給与レンジ（最大）<input type="text" name="salaryRangeMax" /></label>
-      <label>ポジション<input type="text" name="position" /></label>
-      <label>言語（カンマ区切り）<input type="text" name="languages" placeholder="例: JavaScript, Python" /></label>
-      <label>業務内容<textarea name="jobDescription" rows="3"></textarea></label>
-      <label>リモート制度<input type="text" name="remotePolicy" /></label>
-      <label>フレックス制度<input type="text" name="flexPolicy" /></label>
-      <label>選考状況
-        <select name="selectionStatus" required>
-          <option value="">選択してください</option>
-          <option value="応募済">応募済</option>
-          <option value="書類選考">書類選考</option>
-          <option value="面接待ち">面接待ち</option>
-          <option value="内定">内定</option>
-          <option value="辞退">辞退</option>
-        </select>
-      </label>
-      <label>次回選考日<input type="date" name="nextSelectionDate" /></label>
-
-      <button type="submit" style="margin-top: 15px;">登録</button>
+      <label>企業名</label><input type="text" name="companyName" required>
+      <label>勤務地</label><input type="text" name="location">
+      <label>提示年収</label><input type="text" name="offeredAnnualSalary">
+      <label>給与range_min</label><input type="text" name="salaryRangeMin">
+      <label>給与range_max</label><input type="text" name="salaryRangeMax">
+      <label>ポジション</label><input type="text" name="position">
+      <label>言語（カンマ区切り）</label><input type="text" name="languages">
+      <label>業務内容</label><textarea name="jobDescription"></textarea>
+      <label>リモート制度</label><input type="text" name="remotePolicy">
+      <label>フレックス制度</label><input type="text" name="flexPolicy">
+      <label>選考状況</label>
+      <select name="selectionStatus" required>
+        <option value="">選択してください</option>
+      </select>
+      <label>次回選考日</label><input type="date" name="nextSelectionDate">
+      <button type="submit" class="primary-btn">登録</button>
     </form>
   </div>
 </div>
@@ -55,18 +55,26 @@
 <div id="detail-modal" class="modal">
   <div class="modal-content">
     <button class="close-btn">&times;</button>
-    <div class="detail-content">
-      <!-- 詳細情報ここに -->
-    </div>
+    <div class="detail-content"></div>
   </div>
 </div>
 
-<!-- Firebase SDK -->
+<!-- マスタ管理モーダル -->
+<div id="status-master-modal" class="modal">
+  <div class="modal-content">
+    <button class="close-btn">&times;</button>
+    <h2>選考状況マスタ管理</h2>
+    <ul id="status-list"></ul>
+    <form id="add-status-form">
+      <input type="text" id="new-status" placeholder="新しい選考状況" required />
+      <button type="submit" class="primary">追加</button>
+    </form>
+  </div>
+</div>
+
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
-
-<!-- 自作JS -->
 <script src="app.js"></script>
 
 </body>

@@ -22,7 +22,15 @@ https://kazuya83.github.io/JobChangeManagement
 
 ---
 
-## 大切なご注意
+## 使用技術
+
+- HTML / CSS / JavaScript
+- Firebase（Authentication, Firestore）
+- GitHub Pagesでのホスティング
+- CD:Github Actions
+---
+
+## 注意事項
 
 このアプリはFirebaseというクラウドサービスを利用しています。  
 アプリの動作に必要な設定情報が一部公開されていますが、この情報はサービスの利用に必要なものであり、どのサービスも従量課金でないため妥協しております。

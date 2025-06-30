@@ -1,8 +1,9 @@
-// Firebase モジュールの読み込み
+// Firebase SDK の読み込み（モジュール）
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
 import { getFirestore, collection, addDoc, onSnapshot, deleteDoc, doc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 
-// ✅ Firebase 設定
+// 🔐 Firebase 設定
 const firebaseConfig = {
   apiKey: "AIzaSyCTngInADgWVe4gu5y-CndjmlWQDJ2Ax1M",
   authDomain: "jobchangemanagement.firebaseapp.com",
@@ -13,21 +14,32 @@ const firebaseConfig = {
   measurementId: "G-T89C8PTBTS"
 };
 
-// ✅ Firebase 初期化
+// Firebase 初期化
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
+const auth = getAuth(app);
 const tasksRef = collection(db, "tasks");
 
-// ✅ タスク追加処理
+// 匿名ログイン
+signInAnonymously(auth).catch((error) => {
+  console.error("匿名ログインに失敗しました:", error);
+});
+
+// タスク追加
 async function addTask() {
   const input = document.getElementById("taskInput");
   const text = input.value.trim();
   if (!text) return;
-  await addDoc(tasksRef, { text, done: false });
-  input.value = "";
+
+  try {
+    await addDoc(tasksRef, { text, done: false });
+    input.value = "";
+  } catch (e) {
+    console.error("タスク追加失敗:", e);
+  }
 }
 
-// ✅ タスク表示処理
+// タスク表示（リアルタイム反映）
 function renderTasks() {
   onSnapshot(tasksRef, snapshot => {
     const list = document.getElementById("taskList");
@@ -41,7 +53,7 @@ function renderTasks() {
   });
 }
 
-// ✅ 初期化処理
+// 初期化
 document.addEventListener("DOMContentLoaded", () => {
   document.getElementById("addTaskBtn").addEventListener("click", addTask);
   renderTasks();

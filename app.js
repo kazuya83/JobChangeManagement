@@ -243,6 +243,10 @@ function renderCompanyList() {
       <div>提示年収: ${escapeHtml(c.salary)}</div>
       <div>選考状況: ${escapeHtml(c.selectionStatus)}</div>
       <div>次回選考日: ${escapeHtml(c.nextSelectionDate)}</div>
+      <div>
+        ${getRemoteTag(escapeHtml(c.remotePolicy))}
+        ${getFlexTag(escapeHtml(c.flexPolicy))}
+      </div>
       <button class="copy-btn">コピー</button>
       <button class="delete-btn" id="${c.id}">削除</button>
     `;
@@ -483,4 +487,20 @@ async function deleteCompany(companyId) {
   } catch (e) {
     alert("削除に失敗しました: " + e.message);
   }
+}
+
+function getRemoteTag(remoteText) {
+    if (isNullOrEmpty(remoteText)) { return ''; }
+
+    return `<span class="policy-label ${(remoteText === "フルリモート" ? "gold-color" : "")}">${remoteText}</span>`;
+}
+
+function getFlexTag(flexText) {
+    if (isNullOrEmpty(flexText)) { return ""; }
+
+    return `<span class="policy-label ${(flexText === "フルフレックス" ? "gold-color" : "")}">${flexText}</span>`;
+}
+
+function isNullOrEmpty(text) {
+    return text === null || text === undefined || text.length === 0;
 }

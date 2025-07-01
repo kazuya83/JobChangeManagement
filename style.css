@@ -264,3 +264,18 @@ select#filter-status-select {
 @keyframes spin {
   to { transform: rotate(360deg); }
 }
+
+.policy-label {
+  width: 90px;
+  background: #a5ff6f;
+  border-radius: 5px;
+  box-shadow: 0 1px 4px rgb(0 0 0 / 0.1);
+  padding: 3px;
+  text-align: center;
+  font-size: 12px;
+  margin: 0 5px;
+}
+
+.gold-color {
+  background: linear-gradient(45deg, #B67B03 0%, #DAAF08 45%, #FEE9A0 70%, #DAAF08 85%, #B67B03 90% 100%);
+}

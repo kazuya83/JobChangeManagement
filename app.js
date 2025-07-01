@@ -232,7 +232,7 @@ function renderCompanyList() {
     companyList.innerHTML = `<p>登録された企業がありません。</p>`;
     return;
   }
-  filteredCompanies.forEach((c, i) => {
+  filteredCompanies.slice().sort((a, b) => Number(b.salary.replace("万円", "") ?? "0") - Number(a.salary.replace("万円", "") ?? "0")).forEach((c, i) => {
     const color = getStatusColor(c.selectionStatus) || "#888";
     const card = document.createElement("div");
     card.className = "company-card";
